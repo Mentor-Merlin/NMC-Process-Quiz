@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NMC Process Quiz</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: auto;
+      padding: 20px;
+    }
+    h2 {
+      text-align: center;
+    }
+    form > div {
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+    }
+    input[type="submit"] {
+      padding: 10px 20px;
+      font-size: 16px;
+    }
+    .hidden {
+      display: none;
+    }
+    .wrong {
+      background: #ffe6e6;
+      padding: 10px;
+      margin-top: 5px;
+      border-left: 4px solid red;
+    }
+  </style>
+</head>
+<body>
+  <h2>NMC Process Quiz</h2>
+  <form id="quizForm">
+    <!-- Questions 1 to 15 -->
+  </form>
+  <div id="result" class="hidden"></div>
+
+  <script>
+    const questions = [...]; // (same as current questions array, unchanged)
+
+    const form = document.getElementById("quizForm");
+    const resultDiv = document.getElementById("result");
+
+    questions.forEach((item, index) => {
+      const qDiv = document.createElement("div");
+      qDiv.id = `question-${index}`;
+      const label = document.createElement("label");
+      label.textContent = `${index + 1}. ${item.q}`;
+      qDiv.appendChild(label);
+      item.options.forEach(option => {
+        const input = document.createElement("input");
+        input.type = "radio";
+        input.name = `q${index}`;
+        input.value = option;
+        input.required = true;
+        qDiv.appendChild(input);
+        qDiv.appendChild(document.createTextNode(option));
+        qDiv.appendChild(document.createElement("br"));
+      });
+      form.appendChild(qDiv);
+    });
+
+    const submit = document.createElement("input");
+    submit.type = "submit";
+    submit.value = "Submit Quiz";
+    form.appendChild(submit);
+
+    form.onsubmit = function (e) {
+      e.preventDefault();
+      let score = 0;
+      let wrongAnswers = [];
+
+      questions.forEach((item, index) => {
+        const selected = form[`q${index}`].value;
+        const questionDiv = document.getElementById(`question-${index}`);
+        if (selected === item.answer) {
+          score++;
+        } else {
+          const wrongDiv = document.createElement("div");
+          wrongDiv.className = "wrong";
+          wrongDiv.innerHTML = `<strong>Wrong Answer:</strong> You selected: <em>${selected}</em><br>Correct Answer: <strong>${item.answer}</strong>`;
+          questionDiv.appendChild(wrongDiv);
+          wrongAnswers.push(`${index + 1}. ${item.q}\nYour Answer: ${selected}\nCorrect Answer: ${item.answer}`);
+        }
+      });
+
+      const passed = score >= 12;
+      resultDiv.classList.remove("hidden");
+      resultDiv.innerHTML = `
+        <h3>Your Score: ${score}/15</h3>
+        <p>${passed ? "Congratulations! You passed." : "You did not pass. Please review the material and try again later."}</p>
+      `;
+
+      fetch("https://formspree.io/f/mgvyzrka", {
+        method: "POST",
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          email: "nandhu.poweroins@gmail.com",
+          subject: "NMC Quiz Submission",
+          message: `Score: ${score}/15. Result: ${passed ? "Pass" : "Fail"}\n\nIncorrect Answers:\n${wrongAnswers.join("\n\n")}`
+        })
+      });
+
+      form.querySelectorAll("input").forEach(i => i.disabled = true);
+      submit.disabled = true;
+    }
+  </script>
+</body>
+</html>
